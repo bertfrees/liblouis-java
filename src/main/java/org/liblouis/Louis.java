@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
+import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 public class Louis {
@@ -36,7 +37,14 @@ public class Louis {
 		
 		public int lou_hyphenate(String tableList, WideString inbuf, int inlen, byte[] hyphens, int mode);
 		
+		public int trace_translate(String tableList, WideString inbuf, IntByReference inlen,
+				WideString outbuf, IntByReference outlen, byte typeform[], byte spacing[],
+				int[] outputPos, int[] inputPos, IntByReference cursorPos,
+				Pointer rules, IntByReference rulesLen, int mode);
+		
 		public int lou_charSize();
+		
+		public Pointer lou_getTable(String tableList);
 		
 		public int lou_free();
 		

@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 
 import org.liblouis.Louis.LouisLibrary;
 
+import com.sun.jna.Memory;
+import com.sun.jna.Native;
 import com.sun.jna.ptr.IntByReference;
 
 public class Translator {
@@ -89,6 +91,26 @@ public class Translator {
 		return hyphens;
 	}
 	
+	private static final int RULE_BUFFER_SIZE = 1024;
+	private static final Memory RULE_BUFFER = new Memory(RULE_BUFFER_SIZE * Native.POINTER_SIZE);
+	
+	public TranslationResult trace(String text) {
+		
+		WideString inbuf = getBuffer("in", text.length()).write(text);
+		WideString outbuf = getBuffer("out", text.length() * OUTLEN_MULTIPLIER);
+		int[] outputPos = getPositionBuffer("out", inbuf.length());
+		int[] inputPos = getPositionBuffer("in", outbuf.length());
+		IntByReference inlen = new IntByReference(text.length());
+		IntByReference outlen = new IntByReference(outbuf.length());
+		IntByReference ruleslen = new IntByReference(RULE_BUFFER_SIZE);
+		
+		if (Louis.getLibrary().trace_translate(tables, inbuf, inlen, outbuf, outlen, null,
+				null, outputPos, inputPos, null, RULE_BUFFER, ruleslen, 0) == 0)
+			throw new RuntimeException("Unable to complete translation");
+		
+		return new TranslationResult(outbuf, inlen, outlen, outputPos, inputPos, RULE_BUFFER, ruleslen);
+	}
+	
 	/*
 	 * Number by which the input length should be multiplied to calculate
 	 * the maximum output length. This default will handle the case where
@@ -96,8 +118,9 @@ public class Translator {
 	 */
 	private static final int OUTLEN_MULTIPLIER = WideChar.Constants.CHARSIZE * 2 + 4;
 	
-	private static Map<String,WideString> BUFFERS = new HashMap<String,WideString>();
-	private static Map<String,byte[]> HYPHEN_BUFFERS = new HashMap<String,byte[]>();
+	private static final Map<String,WideString> BUFFERS = new HashMap<String,WideString>();
+	private static final Map<String,byte[]> HYPHEN_BUFFERS = new HashMap<String,byte[]>();
+	private static final Map<String,int[]> POSITION_BUFFERS = new HashMap<String,int[]>();
 	
 	private static WideString getBuffer(String id, int minCapacity) {
 		WideString buffer = BUFFERS.get(id);
@@ -111,6 +134,13 @@ public class Translator {
 		byte[] buffer = HYPHEN_BUFFERS.get(id);
 		if (buffer == null || buffer.length < minCapacity) {
 			buffer = new byte[minCapacity * 2]; }
+		return buffer;
+	}
+	
+	private static int[] getPositionBuffer(String id, int minCapacity) {
+		int[] buffer = POSITION_BUFFERS.get(id);
+		if (buffer == null || buffer.length < minCapacity) {
+			buffer = new int[minCapacity * 2]; }
 		return buffer;
 	}
 	
