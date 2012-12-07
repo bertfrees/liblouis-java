@@ -24,7 +24,6 @@ public class MultipassScript extends WideString {
 	
 	@Override
 	public String toString() {
-		String[] testAction = toTestAction(super.read(length()));
 		return test + " " + action;
 	}
 	

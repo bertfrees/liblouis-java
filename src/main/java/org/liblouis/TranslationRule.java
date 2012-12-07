@@ -99,6 +99,14 @@ public class TranslationRule extends Structure {
 	}
 	
 	@Override
+	public String toString() {
+		if (script != null)
+			return script.toString();
+		else
+			return chars.toString() + " " + dots.toString();
+	}
+	
+	@Override
 	public boolean equals(Object obj) {
 		try {
 			TranslationRule that = (TranslationRule)obj;
